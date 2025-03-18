@@ -21,11 +21,15 @@ export async function middleware(request) {
     ? authHeader.split(" ")[1]
     : authHeader;
     
+    // Get the whole URL & replace it with the new URL route
     const validateTokenUrl = new URL("/api/validate-token", request.url);
+
+    // Using the new URL fetch data from the URL which is an object by using the token extracted from the header
     const validateResponse = await fetch(validateTokenUrl, {
       headers: { authorization: `${accessToken}` },
     });
   
+    // Get the response from the URL (which is either true or false)
     const validateData = await validateResponse.json();
     if (validateData.invalid) {
       return NextResponse.json({ message: "Access token is revoked" }, { status: 401 });
