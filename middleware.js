@@ -3,10 +3,9 @@ import { NextResponse } from "next/server";
 
 // To resolve this issue we can use a JWT library that is compatible with the edge runtime of nextjs. One such library is 'jose'
 import { jwtVerify } from "jose";
-import { JWTExpired, JWTInvalid } from "jose/dist/types/util/errors";
-import InvalidAccessToken from "./util/InvalidAccessToken";
 
 export async function middleware(request) {
+
   const authHeader = request.headers.get("authorization");
 
   if (!authHeader) {
@@ -16,17 +15,21 @@ export async function middleware(request) {
     );
   }
 
+  
   try {
     const accessToken = authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : authHeader;
-
-      const isInvalid = await InvalidAccessToken.findOne({token:accessToken});
-
-      if (isInvalid) {
-        return NextResponse.json({ message: "Invalid access token" }, { status: 401 });
-      }
-
+    ? authHeader.split(" ")[1]
+    : authHeader;
+    
+    const validateTokenUrl = new URL("/api/validate-token", request.url);
+    const validateResponse = await fetch(validateTokenUrl, {
+      headers: { authorization: `${accessToken}` },
+    });
+  
+    const validateData = await validateResponse.json();
+    if (validateData.invalid) {
+      return NextResponse.json({ message: "Access token is revoked" }, { status: 401 });
+    }
     // verify the token using 'jwt'
     // const decodedAccessToken = jwt.verify(accessToken, process.env.SECRET_KEY);
 
@@ -47,22 +50,27 @@ export async function middleware(request) {
       request: { headers: requestHeaders },
     });
   } catch (error) {
-    if (error instanceof JWTExpired) {
+    if (error.message.includes("JWTExpired")) {
       return NextResponse.json(
         { message: "Access token is expired" },
         { status: 401 }
       );
-    } else if (error instanceof JWTInvalid) {
+    } else if (error.message.includes("JWTInvalid")) {
       return NextResponse.json(
         { message: "Access token is invalid" },
         { status: 401 }
       );
     } else {
+      console.log(error)
       return NextResponse.json({ message: error.message }, { status: 500 });
     }
   }
 }
 
 export const config = {
-  matcher: ["/api/users/current", "/api/admin/:path*", "/api/moderator/:path*","/api/logout"],
+  matcher: [
+    "/api/users/current",
+    "/api/admin/:path*",
+    "/api/moderator/:path*",
+  ],
 };
