@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 // To resolve this issue we can use a JWT library that is compatible with the edge runtime of nextjs. One such library is 'jose'
 import { jwtVerify } from "jose";
 import { JWTExpired, JWTInvalid } from "jose/dist/types/util/errors";
+import InvalidAccessToken from "./util/InvalidAccessToken";
 
 export async function middleware(request) {
   const authHeader = request.headers.get("authorization");
@@ -20,6 +21,12 @@ export async function middleware(request) {
       ? authHeader.split(" ")[1]
       : authHeader;
 
+      const isInvalid = await InvalidAccessToken.findOne({token:accessToken});
+
+      if (isInvalid) {
+        return NextResponse.json({ message: "Invalid access token" }, { status: 401 });
+      }
+
     // verify the token using 'jwt'
     // const decodedAccessToken = jwt.verify(accessToken, process.env.SECRET_KEY);
 
@@ -32,7 +39,7 @@ export async function middleware(request) {
     const requestHeaders = new Headers(request.headers);
 
     // requestHeaders.set("x-user-id", decodedAccessToken.userId); // using 'jwt'
-    
+
     requestHeaders.set("x-user-id", payload.userId); // using 'jose'
     requestHeaders.set("x-user-role", payload.role);
 
