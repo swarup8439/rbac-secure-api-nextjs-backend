@@ -55,7 +55,7 @@ export async function POST(request) {
     // Generate the new DB
     const newRefreshToken = await new SignJWT({ userId: user._id.toString() })
       .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("3m")
+      .setExpirationTime("1h")
       .sign(secretRf);
 
     // Store the new refresh token in the DB
@@ -69,7 +69,7 @@ export async function POST(request) {
       role: user.role,
     })
       .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("1m")
+      .setExpirationTime("5m")
       .sign(secret);
 
     // Return the new access token & the new refresh token

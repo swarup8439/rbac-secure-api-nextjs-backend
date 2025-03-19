@@ -50,7 +50,7 @@ export async function POST(request) {
   const accessToken = await new SignJWT({ userId: user._id.toString() }) // Create a new JWT !Q& label it as userId
     .setProtectedHeader({ alg: "HS256" }) // Set the algorithm
     .setSubject("accessToken") // Set the subject
-    .setExpirationTime("1m") // Set expiration time
+    .setExpirationTime("5m") // Set expiration time
     .sign(secret); // Sign the token
 
   // Generate a refresh token using Jose
@@ -58,7 +58,7 @@ export async function POST(request) {
 
   const refreshToken = await new SignJWT({userId:user._id.toString() })
   .setProtectedHeader({alg:"HS256"})
-  .setExpirationTime("3m")
+  .setExpirationTime("1h")
   .setSubject("refreshToken")
   .sign(secretRf);
 
