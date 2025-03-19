@@ -76,5 +76,6 @@ export const config = {
     "/api/users/current",
     "/api/admin/:path*",
     "/api/moderator/:path*",
+    "/api/2fa"
   ],
 };

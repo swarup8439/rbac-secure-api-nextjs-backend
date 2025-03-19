@@ -29,6 +29,8 @@ export async function POST(request) {
     email,
     password: hashedPassword,
     role: role || "member",
+    twoFAEnable: false,
+    twoFASecret: null,
   });
 
   try {

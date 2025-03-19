@@ -11,6 +11,9 @@
   "dependencies": {
     "jose": "^6.0.10",
     "next": "15.2.2",
+    "node-cache": "^5.1.2",
+    "otplib": "^12.0.1",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

@@ -11,6 +11,8 @@ const userSchema = new Schema(
       default: "member",
       required: true,
     },
+    twoFAEnable: { type: Boolean, default: false },
+    twoFASecret: { type: String, default: null },
   },
   { timestamps: true }
 );
