@@ -77,3 +77,64 @@ export async function GET(request) {
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
+
+// TOTP - Time-based One Time Password
+
+// Handle TOTP Verification Request
+export async function POST(request) {
+  await connectDB();
+  try {
+    const { totp } = await request.json();
+
+    if (!totp) {
+      return NextResponse.json({ message: "TOTP is missing" }, { status: 400 });
+    }
+
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      return NextResponse.json(
+        { message: "Unauthorized request :( " },
+        { status: 401 }
+      );
+    }
+
+    // Extract Access Token
+    const accessToken = authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : authHeader;
+
+    // Verify JWT Token
+    const { payload } = await jwtVerify(
+      accessToken,
+      new TextEncoder().encode(process.env.SECRET_KEY)
+    );
+
+    // Find User
+    const user = await User.findById(payload.userId);
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    const verified = authenticator.check(totp, user.twoFASecret);
+
+    if (!verified) {
+      return NextResponse.json({ message: "Invalid TOTP" }, { status: 401 });
+    }
+
+    await User.updateOne(
+      { _id: payload.userId },
+      { $set: { twoFAEnable: true } }
+    );
+
+    return NextResponse.json(
+      { message: "TOTP verified successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      { message: "Error verifying TOTP" },
+      { status: 500 }
+    );
+  }
+}
